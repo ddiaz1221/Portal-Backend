@@ -21,7 +21,7 @@ connectDB();
 
 // middleware of the server
 app.use(cors({
-    origin: 'https://portal-frontend-portal2026.vercel.app',
+    origin: ['https://localhost:5173','https://portal-frontend-portal2026.vercel.app', /https:\/\/portal-frontend-.*\.vercel\.app$/],
     credentials: true
 }))
 app.use(express.json());  /*this allows the server to detect JSON payloads in the front end of website */
