@@ -1,83 +1,83 @@
 import express from 'express';
 import Note from '../models/Notes';
 
+// this is from the existing authentication middleware
+import { protect } from '../middleware/authMiddleware';
+
 const router = express.Router();
 
-// this is to save an new Note
-router.post('/save', async (req, res) => {
+router.post('/send', protect, async (req: any, res: any) => {
     try{
-        const {userId, content} = req.body;
+        const {receiverUsername, content} = req.body;
+        const senderId = req.user._id;
 
-        if (!userId || !content){
-            return res.status(400).json({message: 'Missing user ID or cotnent' });
+        if(!receiverUsername || !content){
+            return res.status(400).json({message: 'Recipient user and content are required'});
         }
 
-        const newNote = new Note({userId, content});
-        await newNote.save();
+        const receiver = await.User.findOne({username: receiverUsername});
+        if (!receiver){
+            return res.status(404).json({message: 'User not found'});
+        }
 
-        res.status(201).json({message: 'Note saved sucessfully', note: newNote});
+        if (receiver._id.toString() === senderId.toString()){
+            return res.status(400).json({message: 'Cannot send notes to yourself'});
+        }
+
+        const newNote = await Note.create({
+            sender: senderId,
+            receiver: receiver._id,
+            content,
+            status: 'inbox'
+        })
+
+        const populatedNote = await newNote.populate('sender', 'username');
+
+        res.status(201).json(populatedNote);
     } catch(error){
-        console.error('Save Note Error:', error);
-        res.status(500).json({message: 'Server error while saving note'});
+        res.status(500).json({message: 'Server error sending note', error});
     }
 })
 
-// this fetches all the notes made by a specific user
-router.get('/:userId', async (req, res) => {
+router.get('/', protect, async (req:any, res:any) => {
     try{
-        const {userId} = req.params;
+        const userId = req.user._id;
+        const statusFilter = req.query.status || 'inbox';
+        const notes = await Note.find({
+            receiver: userId,
+            status: statusFilter
+        })
+        .populate('sender', 'username')
+        .sort({createdAt: -1})
 
-        // this is going to find the notes only matching a users unique ID sorting by newest first
-        const notes = await Note.find({userId, isDeleted: false}).sort({createdAt: -1});
         res.status(200).json(notes);
     } catch(error){
-        console.error('Fetch Notes Error:', error);
-        res.status(500).json({message: 'Server error while fetching notes'});
+        res.status(500).json({message: 'Server error fecthing note', error});
     }
 })
 
-router.get('/trash/:userId', async (req, res) => {
+router.patch('/:id/status', protect, async (req:any, res:any) => {
     try{
-        const {userId} = req.params;
-        const trashedNotes = await Note.find({userId, isDeleted: true}).sort({createdAt: -1});
-        res.status(200).json(trashedNotes);
-    } catch(error){
-        console.error('Fetch Trash Error', error);
-        res.status(500).json({message: 'Server error while fetching trash'});
-    }
-})
+        const {status} = req.body;
+        const noteId = req.params.id;
+        const userId = req.user._id;
 
-router.put('/status/:noteId', async (req, res) => {
-    try {
-        const {noteId} = req.params;
-        const {isDeleted} = req.body;
-
-        const updatedNote = await Note.findByIdAndUpdate(noteId, {isDeleted}, {new: true});
-
-        if (!updatedNote){
-            return res.status(404).json({message: 'Note Not Found'});
+        if (!['inbox', 'saved', 'trash'].includes(status)){
+            return res.status(400).json({mesage: 'Invalid status update parameters'});
         }
 
-        res.status(200).json({message: 'Note Status Updated', note: updatedNote});
-    } catch(error){
-        console.error('Toggle Delete Status Error:', error);
-        res.status(500).json({message: 'Server error updating note status'});
-    }
-})
-
-router.delete('/purge/:noteId', async (req, res) => {
-    try {
-        const {noteId} = req.params;
-        const deleteNote = await Note.findByIdAndDelete(noteId);
-
-        if(!deleteNote){
-            return res.status(404).json({message: 'Note not found'});
+        const note = await Note.findOne({_id: noteId, receiver: userId});
+        if (!note){
+            return res.status(404).json({message: 'Note not found or unauthorized access'});
         }
-        res.status(200).json({message: 'Note permanently removed from database'});
+
+        note.status = status;
+        await note.save();
+
+        res.status(200).json({message: `Note moved to ${status} successfully`, note});
     } catch(error){
-        console.error('Purge Note Error', error);
-        res.status(500).json({message: 'Server error during hard deletion'});
+        res.status(500).json({message: 'Sever error updating note status', error});
     }
 })
 
-export default router;
+export default router; 
