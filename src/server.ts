@@ -10,11 +10,20 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+app.listen(PORT, () => {
+    console.log(`Server is Running securely on port ${PORT}`);
+})
+
+
+
 // this is a call to the database so a connection can be made
 connectDB();
 
 // middleware of the server
-app.use(cors({origin: 'http://localhost:5173'}));
+app.use(cors({
+    origin: 'https://portal-frontend-portal2026.vercel.app',
+    credentials: true
+}))
 app.use(express.json());  /*this allows the server to detect JSON payloads in the front end of website */
 
 
@@ -26,6 +35,5 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Backend server is running smoohtly!');
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is sprinting on port ${PORT}`);
-});
+
+
