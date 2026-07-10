@@ -1,0 +1,15 @@
+// this is changed from the original tscongfig.json file so that it can work with modern Nodejs syntax
+
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipDefaultLibCheck": true
+  }
+}
