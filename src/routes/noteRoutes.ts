@@ -4,7 +4,6 @@ import User from '../models/user';
 import jwt from 'jsonwebtoken';
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'your_fallback_jwt_secret';
 
 // 1. Properly structured Express Middleware
 const authenticateToken = (req: any, res: Response, next: NextFunction) => {
@@ -16,6 +15,7 @@ const authenticateToken = (req: any, res: Response, next: NextFunction) => {
   }
 
   try {
+    const JWT_SECRET = process.env.JWT_SECRET || 'your_fallback_jwt_secret';
     const verified = jwt.verify(token, JWT_SECRET);
     req.user = verified; // Attaches decoded user info (like _id) to req.user
     next(); // Pass control to the next handler
