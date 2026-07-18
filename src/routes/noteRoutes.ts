@@ -50,7 +50,7 @@ router.post('/send', authenticateToken, async (req: any, res: any) => {
       status: 'inbox'
     });
 
-    const populatedNote = await Note.findById(newNote._id).populate('sender', 'user');
+    const populatedNote = await Note.findById(newNote._id).populate('sender', 'username');
     res.status(201).json(populatedNote);
   } catch (error) {
     console.error("CRITICAL BACKEND ERROR IN /SEND:", error);

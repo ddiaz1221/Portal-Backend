@@ -63,7 +63,7 @@ router.post('/login', async (req, res) => {
         // this is for the json JWT token so no logout on refresh
         const secret = process.env.JWT_SECRET || 'your_fallback_jwt_secret';
         const token = jwt.sign(
-            {id: user.id, username: user.username, email: user.email},
+            {id: user.id.toString(), username: user.username, email: user.email},
             secret,
             {expiresIn: '1d'}
         )
