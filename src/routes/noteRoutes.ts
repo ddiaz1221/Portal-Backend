@@ -50,7 +50,7 @@ router.post('/send', authenticateToken, async (req: any, res: any) => {
       status: 'inbox'
     });
 
-    const populatedNote = await newNote.populate('sender', 'username');
+    const populatedNote = await Note.findById(newNote._id).populate('sender', 'user');
     res.status(201).json(populatedNote);
   } catch (error) {
     res.status(500).json({ message: 'Server error sending note', error });
