@@ -15,8 +15,8 @@ const authenticateToken = (req: any, res: Response, next: NextFunction) => {
   }
 
   try {
-    const JWT_SECRET = process.env.JWT_SECRET || 'your_fallback_jwt_secret';
-    const verified = jwt.verify(token, JWT_SECRET);
+    const secret = process.env.JWT_SECRET || 'your_fallback_jwt_secret';
+    const verified = jwt.verify(token, secret);
     req.user = verified; // Attaches decoded user info (like _id) to req.user
     next(); // Pass control to the next handler
   } catch (error) {
